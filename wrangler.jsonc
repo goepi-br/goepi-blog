@@ -4,10 +4,12 @@
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
 	"compatibility_flags": ["nodejs_compat"],
-	// Endereço público do blog. Precisa estar definido antes do primeiro acesso
-	// ao painel, porque as passkeys ficam presas a este endereço.
+	// Endereço público do blog (goepi.com.br/blog). As passkeys ficam presas a
+	// este domínio. blog.goepi.com.br continua aceito como origem extra
+	// enquanto os usuários migram as chaves do endereço antigo.
 	"vars": {
-		"EMDASH_SITE_URL": "https://blog.goepi.com.br",
+		"EMDASH_SITE_URL": "https://goepi.com.br",
+		"EMDASH_ALLOWED_ORIGINS": "https://blog.goepi.com.br",
 	},
 	// O blog responde em goepi.com.br/blog. O resto de goepi.com.br continua
 	// no projeto Pages "goepi" (repositório goepi-br/website): estas rotas
