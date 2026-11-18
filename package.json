@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "deploy": "astro build && emdash migrate --status --account-id 1381c3d760ce749b46dced397db3b87a --wrangler-config wrangler.jsonc && wrangler deploy",
+    "deploy": "astro build && emdash migrate --take-over-lock 1795041900323 --account-id 1381c3d760ce749b46dced397db3b87a --wrangler-config wrangler.jsonc --expected-target-fingerprint d1ab3d22c660dda41cb48bfbfd5ca4bba2334766ade9e7bc09efbae629c07dd5 && wrangler deploy",
     "typecheck": "astro check"
   },
   "dependencies": {
