@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "deploy": "astro build && wrangler deploy",
+    "deploy": "astro build && emdash migrate --status --account-id 1381c3d760ce749b46dced397db3b87a --wrangler-config wrangler.jsonc && wrangler deploy",
     "typecheck": "astro check"
   },
   "dependencies": {
