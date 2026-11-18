@@ -2,27 +2,27 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Page not found">
+<Base title="Página não encontrada">
 	<section class="band not-found">
 		<div class="not-found__backdrop" aria-hidden="true"></div>
 		<div class="frame not-found__inner">
-			<p class="eyebrow not-found__code">Error 404</p>
-			<h1 class="intro__title">Page not found</h1>
+			<p class="eyebrow not-found__code">Erro 404</p>
+			<h1 class="intro__title">Página não encontrada</h1>
 			<p class="intro__lead">
-				The page you’re looking for doesn’t exist or may have moved.
+				A página que você procura não existe ou mudou de endereço.
 			</p>
 			<div class="not-found__actions">
-				<a href="/" class="btn">Go home</a>
-				<a href="/posts" class="btn btn--ghost">Browse posts</a>
+				<a href="/" class="btn">Ir para o início</a>
+				<a href="/posts" class="btn btn--ghost">Ver artigos</a>
 			</div>
 			<form
 				method="get"
 				action="/search"
 				role="search"
-				aria-label="Posts"
+				aria-label="Artigos"
 				class="not-found__search"
 			>
-				<label for="not-found-query" class="sr-only">Search posts</label>
+				<label for="not-found-query" class="sr-only">Buscar artigos</label>
 				<svg
 					class="not-found__search-icon"
 					viewBox="0 0 24 24"
@@ -40,12 +40,12 @@ import Base from "../layouts/Base.astro";
 					class="not-found__search-input"
 					type="search"
 					name="q"
-					placeholder="Or search posts"
+					placeholder="Ou busque um artigo"
 				/>
 				<button
 					type="submit"
 					class="btn not-found__search-submit"
-					aria-label="Search"
+					aria-label="Buscar"
 				>
 					<svg
 						viewBox="0 0 24 24"

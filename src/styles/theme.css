@@ -30,5 +30,47 @@
   }
 */
 
+/* Identidade GoEPI (cores do site goepi.com.br) */
 :root {
+	--goepi-navy: #040a1f;
+	--goepi-navy-2: #0b1430;
+	--goepi-navy-3: #1a2b5a;
+	--goepi-blue: #143ee5;
+	--goepi-blue-2: #1e46eb;
+	--goepi-yellow: #fad11e;
+	--goepi-yellow-2: #ffdf53;
+
+	--color-bg: light-dark(#f6f8fb, var(--goepi-navy));
+	--color-surface: light-dark(#ffffff, var(--goepi-navy-2));
+	--color-fill: light-dark(#ebf0f6, #131f45);
+	--color-fill-strong: light-dark(#dce2ec, var(--goepi-navy-3));
+	--color-text: light-dark(var(--goepi-navy), #f2f4fa);
+	--color-text-secondary: light-dark(#475273, #c8cbd7);
+	--color-muted: light-dark(#59668c, #8e9bc4);
+	--color-border: light-dark(#dce2ec, #1a2547);
+	--color-border-subtle: light-dark(#ebeff6, #141e3d);
+	--color-border-strong: light-dark(#c3cbdb, #2a3a6b);
+
+	--color-brand: light-dark(var(--goepi-blue), var(--goepi-yellow));
+	--color-brand-hover: light-dark(var(--goepi-blue-2), var(--goepi-yellow-2));
+	--color-on-brand: light-dark(#ffffff, var(--goepi-navy));
+
+	--font-heading: var(--font-heading-goepi), var(--font-body);
+	--font-weight-heading: 700;
+	--font-weight-display: 800;
+}
+
+/* Cabeçalho e rodapé sempre escuros, como no site da GoEPI, para o logo ficar legível. */
+.site-header,
+.site-footer {
+	color-scheme: dark;
+	color: var(--color-text);
+}
+
+.site-header {
+	background: color-mix(in srgb, var(--goepi-navy) 92%, transparent);
+}
+
+.site-footer {
+	background: var(--goepi-navy);
 }

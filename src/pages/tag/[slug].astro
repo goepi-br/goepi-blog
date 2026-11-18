@@ -52,8 +52,8 @@ const filteredPosts = posts.map((post) => ({
 ---
 
 <Base
-	title={`Posts tagged "${term.label}"`}
-	description={`All posts tagged with ${term.label}`}
+	title={`Artigos com a tag "${term.label}"`}
+	description={`Todos os artigos com a tag ${term.label}`}
 >
 	<header class="band intro">
 		<div class="frame archive-intro">
@@ -61,11 +61,11 @@ const filteredPosts = posts.map((post) => ({
 				<p class="eyebrow">Tag</p>
 				<h1 class="intro__title">{term.label}</h1>
 				<p class="intro__lead">
-					{term.description || `Posts tagged ${term.label}, newest first.`}
+					{term.description || `Artigos com a tag ${term.label}, dos mais recentes aos mais antigos.`}
 				</p>
 			</div>
 			<a href="/posts" class="arrow-link">
-				All posts
+				Todos os artigos
 				<svg
 					viewBox="0 0 24 24"
 					fill="none"
@@ -104,12 +104,12 @@ const filteredPosts = posts.map((post) => ({
 				) : (
 					<div class="empty-state">
 						<h2 class="empty-state__title">
-							{cursor ? "No more posts" : "Nothing here yet"}
+							{cursor ? "Não há mais artigos" : "Nada por aqui ainda"}
 						</h2>
 						<p class="empty-state__text">
 							{cursor
-								? "This page is past the last post."
-								: `No posts have been tagged ${term.label} so far.`}
+								? "Esta página vem depois do último artigo."
+								: `Ainda não há artigos com a tag ${term.label}.`}
 						</p>
 						<div class="empty-state__actions">
 							<a

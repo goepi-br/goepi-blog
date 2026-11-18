@@ -35,7 +35,7 @@ function escapeHtml(text: string) {
 // title. When it is the whole title, show its highlights in the heading
 // instead of repeating the title underneath.
 const rows = results.map((result) => {
-	const title = result.title ?? "Untitled";
+	const title = result.title ?? "Sem título";
 	const snippetIsTitle =
 		result.snippet?.replaceAll("<mark>", "").replaceAll("</mark>", "") ===
 		escapeHtml(title);
@@ -48,26 +48,26 @@ const rows = results.map((result) => {
 });
 
 const countLabel = nextCursor
-	? `Top ${rows.length} results`
-	: `${rows.length} ${rows.length === 1 ? "result" : "results"}`;
+	? `Primeiros ${rows.length} resultados`
+	: `${rows.length} ${rows.length === 1 ? "resultado" : "resultados"}`;
 ---
 
 <Base
-	title={query ? `Search: ${query}` : "Search"}
-	description="Search blog posts"
+	title={query ? `Busca: ${query}` : "Busca"}
+	description="Buscar artigos do blog"
 >
 	<header class="band intro">
 		<div class="frame">
-			<p class="eyebrow">Search</p>
-			<h1 class="intro__title">What are you looking for?</h1>
+			<p class="eyebrow">Busca</p>
+			<h1 class="intro__title">O que você está procurando?</h1>
 			<form
 				method="get"
 				action="/search"
 				role="search"
-				aria-label="Posts"
+				aria-label="Artigos"
 				class="search-form"
 			>
-				<label for="search-query" class="sr-only">Search posts</label>
+				<label for="search-query" class="sr-only">Buscar artigos</label>
 				<div class="search-field">
 					<svg
 						class="search-field__icon"
@@ -87,17 +87,17 @@ const countLabel = nextCursor
 						type="search"
 						name="q"
 						value={query}
-						placeholder="Search posts"
+						placeholder="Buscar artigos"
 						autofocus={!query}
 					/>
-					<button type="submit" class="btn search-field__submit">Search</button>
+					<button type="submit" class="btn search-field__submit">Buscar</button>
 				</div>
 			</form>
 			{
 				!query && (
 					<p class="search-hint">
-						Searches post titles and full text. Not sure where to start?{" "}
-						<a href="/posts">Browse all posts</a>.
+						Busca nos títulos e no texto dos artigos. Não sabe por onde começar?{" "}
+						<a href="/posts">Ver todos os artigos</a>.
 					</p>
 				)
 			}
@@ -110,8 +110,8 @@ const countLabel = nextCursor
 				<div class="frame">
 					{searchUnavailable ? (
 						<div class="empty-state">
-							<h2 class="empty-state__title">Search isn't available right now</h2>
-							<p class="empty-state__text">Please try again later.</p>
+							<h2 class="empty-state__title">A busca não está disponível agora</h2>
+							<p class="empty-state__text">Tente novamente mais tarde.</p>
 						</div>
 					) : rows.length > 0 ? (
 						<>
@@ -120,7 +120,7 @@ const countLabel = nextCursor
 									<strong>{countLabel}</strong> for “{query}”
 								</p>
 								<a href="/posts" class="arrow-link">
-									All posts
+									Todos os artigos
 									<svg
 										viewBox="0 0 24 24"
 										fill="none"
@@ -174,14 +174,14 @@ const countLabel = nextCursor
 						</>
 					) : (
 						<div class="empty-state">
-							<h2 class="empty-state__title">No results for “{query}”</h2>
+							<h2 class="empty-state__title">Nenhum resultado para “{query}”</h2>
 							<p class="empty-state__text">
-								Check the spelling, try fewer or different words, or browse
-								every post instead.
+								Confira a ortografia, tente menos palavras ou palavras diferentes,
+								ou veja todos os artigos.
 							</p>
 							<div class="empty-state__actions">
 								<a href="/posts" class="btn btn--ghost">
-									Browse all posts
+									Ver todos os artigos
 								</a>
 							</div>
 						</div>

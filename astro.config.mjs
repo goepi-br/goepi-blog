@@ -40,6 +40,13 @@ export default defineConfig({
 		},
 		{
 			provider: fontProviders.google(),
+			name: "Outfit",
+			cssVariable: "--font-heading-goepi",
+			weights: [600, 700, 800],
+			fallbacks: ["sans-serif"],
+		},
+		{
+			provider: fontProviders.google(),
 			name: "JetBrains Mono",
 			cssVariable: "--font-mono",
 			weights: [400, 500],
