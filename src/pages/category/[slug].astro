@@ -1,4 +1,4 @@
 ---
 const slug = Astro.params.slug ?? "";
-return Astro.redirect(slug ? `/?categoria=${encodeURIComponent(slug)}` : "/", 301);
+return Astro.redirect(slug ? `/blog?categoria=${encodeURIComponent(slug)}` : "/blog", 301);
 ---

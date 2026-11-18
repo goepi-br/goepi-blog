@@ -1,7 +1,7 @@
 /** Utilitários do layout GoEPI (homeBlog.pdf / itemBlog.pdf). */
 
-export const SITE_URL = "https://www.goepi.com.br";
-export const FALLBACK_IMAGE = "/goepi/hero-bg.jpg";
+export const SITE_URL = "https://goepi.com.br";
+export const FALLBACK_IMAGE = "/blog/assets/hero-bg.jpg";
 export const CATEGORY_ORDER = [
 	"Novidades",
 	"Atualizações",

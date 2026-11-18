@@ -5,7 +5,6 @@
  */
 import { EmDashHead, EmDashBodyStart, EmDashBodyEnd } from "emdash/ui";
 import { createPublicPageContext } from "emdash/page";
-import { SITE_URL } from "../utils/goepi";
 
 interface Props {
 	title: string;
@@ -59,29 +58,29 @@ const pageCtx = createPublicPageContext({
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{fullTitle}</title>
 		<EmDashHead page={pageCtx} />
-		<link rel="alternate" type="application/rss+xml" title="Feed RSS do Blog GoEPI" href="/rss.xml" />
+		<link rel="alternate" type="application/rss+xml" title="Feed RSS do Blog GoEPI" href="/blog/rss.xml" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
 			rel="stylesheet"
 		/>
-		<link rel="stylesheet" href="/goepi/styles.css" />
+		<link rel="stylesheet" href="/blog/assets/styles.css" />
 	</head>
 	<body class={bodyClass}>
 		<EmDashBodyStart page={pageCtx} />
 		<header class="navbar navbar--solid" id="navbar">
 			<div class="container navbar__inner">
-				<a href={SITE_URL} class="navbar__logo"><img src="/goepi/logo-goepi.png" alt="GoEPI" height="32" /></a>
+				<a href="/" class="navbar__logo"><img src="/blog/assets/logo-goepi.png" alt="GoEPI" height="32" /></a>
 				<nav class="navbar__links" aria-label="Navegação principal">
-					<a href={`${SITE_URL}/#fluxo`}>Como funciona</a>
-					<a href={`${SITE_URL}/about.html`}>Nossa história</a>
-					<a href={`${SITE_URL}/#suporte`}>Perguntas Frequentes</a>
-					<a href="/" aria-current="page">Blog</a>
+					<a href="/#fluxo">Como funciona</a>
+					<a href="/about.html">Nossa história</a>
+					<a href="/#suporte">Perguntas Frequentes</a>
+					<a href="/blog" aria-current="page">Blog</a>
 				</nav>
-				<a href={`${SITE_URL}/#demonstracao`} class="btn btn--yellow"
+				<a href="/#demonstracao" class="btn btn--yellow"
 					>Agendar demonstração <span class="btn__circle btn__circle--yellow2" aria-hidden="true"
-						><img src="/goepi/arrow-right.png" alt="" /></span
+						><img src="/blog/assets/arrow-right.png" alt="" /></span
 					></a
 				>
 				<button class="navbar__burger" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>

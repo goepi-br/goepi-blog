@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { slug, title, excerpt, image, category, date } = Astro.props;
-const href = `/posts/${encodeURIComponent(slug)}`;
+const href = `/blog/${encodeURIComponent(slug)}`;
 const [highlight, rest] = splitTitle(title);
 ---
 
@@ -33,6 +33,6 @@ const [highlight, rest] = splitTitle(title);
 		}
 		<h2><a href={href}>{title}</a></h2>
 		<p>{excerpt || "Leia o conteúdo completo no Blog GoEPI."}</p>
-		<a class="blog-card__cta" href={href}>Ler mais <span aria-hidden="true"><img src="/goepi/arrow-right.png" alt="" /></span></a>
+		<a class="blog-card__cta" href={href}>Ler mais <span aria-hidden="true"><img src="/blog/assets/arrow-right.png" alt="" /></span></a>
 	</div>
 </article>

@@ -24,7 +24,7 @@ const {
 } = Astro.props;
 
 const Heading = `h${headingLevel}` as const;
-const href = `/posts/${post.id}`;
+const href = `/blog/${post.id}`;
 const titleId = `post-${variant}-${post.id}`;
 const title = post.data.title || "Untitled";
 const publishedAt = post.data.publishedAt ?? null;

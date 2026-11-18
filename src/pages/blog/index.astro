@@ -1,0 +1,233 @@
+---
+/**
+ * Página inicial do Blog GoEPI (homeBlog.pdf): busca, filtro por categoria,
+ * grade de artigos e paginação numerada. Tudo renderizado no servidor;
+ * os filtros usam a URL (?q=, ?categoria=, ?pagina=).
+ */
+import {
+	getEmDashCollection,
+	getTaxonomyTerms,
+	getTermsForEntries,
+	search,
+	SearchUnavailableError,
+} from "emdash";
+import GoepiLayout from "../../layouts/GoepiLayout.astro";
+import GoepiCard from "../../components/GoepiCard.astro";
+import { CATEGORY_ORDER, sortCategories } from "../../utils/goepi";
+
+const PER_PAGE = 9;
+const params = Astro.url.searchParams;
+const query = params.get("q")?.trim() ?? "";
+const categorySlug = params.get("categoria")?.trim() ?? "";
+const requestedPage = Math.max(1, Number.parseInt(params.get("pagina") ?? "1", 10) || 1);
+
+// Todos os artigos publicados (o blog é pequeno; paginamos em memória para
+// mostrar o total e as páginas numeradas, como no layout).
+const posts = [];
+let cursor: string | undefined;
+for (let i = 0; i < 20; i++) {
+	const result = await getEmDashCollection("posts", {
+		orderBy: { published_at: "desc" },
+		limit: 100,
+		cursor,
+	});
+	if (Astro.cache?.enabled) Astro.cache.set(result.cacheHint);
+	posts.push(...result.entries);
+	if (!result.nextCursor) break;
+	cursor = result.nextCursor;
+}
+
+const categoriesByEntry = await getTermsForEntries(
+	"posts",
+	posts.map((post) => post.data.id),
+	"category",
+);
+
+// Categorias: as do blog GoEPI sempre aparecem; outras, só se tiverem artigos.
+const allCategories = await getTaxonomyTerms("category");
+const usedCategoryIds = new Set(
+	[...categoriesByEntry.values()].flat().map((term) => term.slug),
+);
+const categories = sortCategories(
+	allCategories.filter(
+		(term) => CATEGORY_ORDER.includes(term.label) || usedCategoryIds.has(term.slug),
+	),
+);
+const activeCategory = categories.find((term) => term.slug === categorySlug) ?? null;
+
+const normalize = (value: string) =>
+	value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+// Busca: texto completo do EmDash (quando disponível) + título e resumo.
+let searchSlugs: Set<string> | null = null;
+if (query) {
+	searchSlugs = new Set();
+	try {
+		const response = await search(query, { collections: ["posts"], limit: 100 });
+		for (const item of response.items) {
+			if (item.slug) searchSlugs.add(item.slug);
+			if (item.id) searchSlugs.add(item.id);
+		}
+	} catch (error) {
+		if (!(error instanceof SearchUnavailableError)) throw error;
+	}
+	const needle = normalize(query);
+	for (const post of posts) {
+		const haystack = normalize(`${post.data.title ?? ""} ${post.data.excerpt ?? ""}`);
+		if (haystack.includes(needle)) searchSlugs.add(post.id);
+	}
+}
+
+const filtered = posts.filter((post) => {
+	if (searchSlugs && !searchSlugs.has(post.id) && !searchSlugs.has(post.data.id)) return false;
+	if (activeCategory) {
+		const terms = categoriesByEntry.get(post.data.id) ?? [];
+		if (!terms.some((term) => term.slug === activeCategory.slug)) return false;
+	}
+	return true;
+});
+
+const total = filtered.length;
+const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+const page = Math.min(requestedPage, totalPages);
+const pagePosts = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+function buildUrl(changes: { q?: string; categoria?: string; pagina?: number }) {
+	const next = new URLSearchParams();
+	const q = changes.q ?? query;
+	const categoria = changes.categoria ?? categorySlug;
+	const pagina = changes.pagina ?? 1;
+	if (q) next.set("q", q);
+	if (categoria) next.set("categoria", categoria);
+	if (pagina > 1) next.set("pagina", String(pagina));
+	const qs = next.toString();
+	return qs ? `/blog?${qs}` : "/blog";
+}
+
+const description =
+	"Acompanhe novidades, atualizações, dicas, treinamentos e conteúdos relevantes para aproveitar melhor a plataforma GoEPI.";
+---
+
+<GoepiLayout title="Blog GoEPI" description={description}>
+	<section class="blog-hero">
+		<div class="blog-hero__glow" aria-hidden="true"></div>
+		<div class="container blog-hero__inner">
+			<h1>Blog GoEPI</h1>
+			<p>
+				Acompanhe novidades, atualizações, dicas, treinamentos e <strong>conteúdos relevantes</strong> para
+				aproveitar melhor a plataforma.
+			</p>
+		</div>
+	</section>
+
+	<section class="blog-listing" aria-labelledby="blog-results-title">
+		<div class="container">
+			<div class="blog-toolbar">
+				<form class="blog-search" action="/blog" method="get" role="search" id="blog-search-form">
+					<label for="blog-search" class="sr-only">Buscar artigos</label>
+					<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.15a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+					<input
+						id="blog-search"
+						name="q"
+						type="search"
+						value={query}
+						placeholder="Buscar artigos por título, palavra-chave ou assunto..."
+						autocomplete="off"
+					/>
+					{categorySlug && <input type="hidden" name="categoria" value={categorySlug} />}
+					<button type="submit">Buscar</button>
+				</form>
+				<nav class="blog-filters" aria-label="Filtrar artigos por categoria">
+					<a
+						class:list={["blog-filter", { "is-active": !activeCategory }]}
+						href={buildUrl({ categoria: "" })}
+						aria-current={!activeCategory ? "page" : undefined}>Todos</a
+					>
+					{
+						categories.map((term) => (
+							<a
+								class:list={["blog-filter", { "is-active": activeCategory?.slug === term.slug }]}
+								href={buildUrl({ categoria: term.slug })}
+								aria-current={activeCategory?.slug === term.slug ? "page" : undefined}
+							>
+								{term.label}
+							</a>
+						))
+					}
+				</nav>
+			</div>
+
+			<p class="blog-result-count" id="blog-results-title" aria-live="polite">
+				{total} {total === 1 ? "artigo encontrado" : "artigos encontrados"}
+			</p>
+
+			{
+				pagePosts.length === 0 && (
+					<div class="blog-status is-empty" role="status">
+						Nenhum artigo foi encontrado. Tente outra busca ou categoria.
+					</div>
+				)
+			}
+
+			<div class="blog-grid">
+				{
+					pagePosts.map((post) => (
+						<GoepiCard
+							slug={post.id}
+							title={post.data.title || "Sem título"}
+							excerpt={post.data.excerpt}
+							image={post.data.featured_image}
+							category={(categoriesByEntry.get(post.data.id) ?? [])[0]?.label ?? null}
+							date={post.data.publishedAt ?? null}
+						/>
+					))
+				}
+			</div>
+
+			{
+				totalPages > 1 && (
+					<nav class="blog-pagination" aria-label="Paginação do blog">
+						{page > 1 ? (
+							<a href={buildUrl({ pagina: page - 1 })} aria-label="Página anterior">‹</a>
+						) : (
+							<span class="is-disabled" aria-hidden="true">‹</span>
+						)}
+						{Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+							<a
+								href={buildUrl({ pagina: n })}
+								class:list={{ "is-current": n === page }}
+								aria-current={n === page ? "page" : undefined}
+							>
+								{n}
+							</a>
+						))}
+						{page < totalPages ? (
+							<a href={buildUrl({ pagina: page + 1 })} aria-label="Próxima página">›</a>
+						) : (
+							<span class="is-disabled" aria-hidden="true">›</span>
+						)}
+					</nav>
+				)
+			}
+		</div>
+	</section>
+
+	<script is:inline>
+		// Busca enquanto digita (envia o formulário após uma pausa).
+		(function () {
+			var form = document.getElementById("blog-search-form");
+			var input = document.getElementById("blog-search");
+			if (!form || !input) return;
+			var timer;
+			input.addEventListener("input", function () {
+				clearTimeout(timer);
+				timer = setTimeout(function () { form.requestSubmit(); }, 500);
+			});
+			if (input.value) {
+				input.focus();
+				var len = input.value.length;
+				input.setSelectionRange(len, len);
+			}
+		})();
+	</script>
+</GoepiLayout>

@@ -1,0 +1,118 @@
+---
+/**
+ * Página de artigo do Blog GoEPI (itemBlog.pdf): hero com a imagem
+ * destacada, resumo em destaque, conteúdo e artigos relacionados.
+ */
+import {
+	getEmDashEntry,
+	getEmDashCollection,
+	getTermsForEntries,
+	getSeoMeta,
+	decodeSlug,
+} from "emdash";
+import { PortableText } from "emdash/ui";
+import GoepiLayout from "../../layouts/GoepiLayout.astro";
+import GoepiCard from "../../components/GoepiCard.astro";
+import { formatShortDate, imageUrl, splitTitle, FALLBACK_IMAGE } from "../../utils/goepi";
+
+const slug = decodeSlug(Astro.params.slug);
+if (!slug) return Astro.rewrite("/404");
+
+const { entry: post, cacheHint } = await getEmDashEntry("posts", slug);
+if (!post) return Astro.rewrite("/404");
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const title = post.data.title || "Sem título";
+const [highlight, rest] = splitTitle(title);
+const heroImage = imageUrl(post.data.featured_image);
+const absoluteImage = heroImage.startsWith("http") ? heroImage : `${Astro.url.origin}${heroImage}`;
+
+const seo = getSeoMeta(post, {
+	siteTitle: "Blog GoEPI",
+	siteUrl: Astro.url.origin,
+	path: Astro.url.pathname.replace(/\/$/, ""),
+	defaultOgImage: heroImage === FALLBACK_IMAGE ? undefined : absoluteImage,
+});
+
+const category = (post.data.terms?.category ?? [])[0] ?? null;
+const publishedAt = post.data.publishedAt ?? null;
+
+// Relacionados: mesma categoria primeiro, depois os mais recentes.
+const { entries: recent, cacheHint: recentHint } = await getEmDashCollection("posts", {
+	orderBy: { published_at: "desc" },
+	limit: 30,
+});
+if (Astro.cache?.enabled) Astro.cache.set(recentHint);
+const others = recent.filter((p) => p.id !== post.id);
+const othersCategories = await getTermsForEntries(
+	"posts",
+	others.map((p) => p.data.id),
+	"category",
+);
+const sameCategory = category
+	? others.filter((p) => (othersCategories.get(p.data.id) ?? []).some((t) => t.slug === category.slug))
+	: [];
+const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes(p))].slice(0, 3);
+---
+
+<GoepiLayout
+	title={title}
+	description={seo.description}
+	image={seo.ogImage}
+	canonical={seo.canonical}
+	robots={seo.robots}
+	type="article"
+	publishedTime={publishedAt?.toISOString() ?? null}
+	modifiedTime={post.data.updatedAt?.toISOString() ?? null}
+	bodyClass="blog-page blog-post-page"
+	content={{ collection: "posts", id: post.data.id, slug }}
+>
+	<section class="article-hero">
+		<div class="article-hero__image" style={`background-image: url(${JSON.stringify(heroImage)})`} aria-hidden="true"></div>
+		<div class="article-hero__overlay" aria-hidden="true"></div>
+		<div class="container article-hero__inner">
+			<a class="article-back" href="/blog">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+				Voltar ao Blog
+			</a>
+			<h1 {...post.edit.title}><span class="goepi-highlight-text">{highlight}</span>{rest && ` ${rest}`}</h1>
+			{
+				publishedAt && (
+					<time datetime={publishedAt.toISOString()}>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg>
+						{formatShortDate(publishedAt)}
+					</time>
+				)
+			}
+		</div>
+	</section>
+
+	<section class="article-content-section">
+		<article class="article-content">
+			{post.data.excerpt && <p class="article-lead" {...post.edit.excerpt}>{post.data.excerpt}</p>}
+			<PortableText value={post.data.content} />
+		</article>
+	</section>
+
+	{
+		related.length > 0 && (
+			<section class="related-section">
+				<div class="container">
+					<h2>Artigos relacionados</h2>
+					<div class="blog-grid blog-grid--related">
+						{related.map((p) => (
+							<GoepiCard
+								slug={p.id}
+								title={p.data.title || "Sem título"}
+								excerpt={p.data.excerpt}
+								image={p.data.featured_image}
+								category={(othersCategories.get(p.data.id) ?? [])[0]?.label ?? null}
+								date={p.data.publishedAt ?? null}
+							/>
+						))}
+					</div>
+				</div>
+			</section>
+		)
+	}
+</GoepiLayout>

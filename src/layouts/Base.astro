@@ -120,7 +120,7 @@ const year = new Date().getFullYear();
 			rel="alternate"
 			type="application/rss+xml"
 			title={`Feed RSS do ${siteTitle}`}
-			href="/rss.xml"
+			href="/blog/rss.xml"
 		/>
 		<script is:inline>
 			// Apply an explicit theme choice immediately to prevent flash.
@@ -141,7 +141,7 @@ const year = new Date().getFullYear();
 		<a href="#main" class="skip-link">Pular para o conteúdo</a>
 		<header class="site-header">
 			<div class="frame site-header__inner">
-				<a href="/" class="brand">
+				<a href="/blog" class="brand">
 					{
 						siteLogo ? (
 							<img
@@ -151,7 +151,7 @@ const year = new Date().getFullYear();
 							/>
 						) : (
 							<img
-								src="/logo-goepi.png"
+								src="/blog/assets/logo-goepi-claro.png"
 								alt={siteTitle}
 								class="brand__logo"
 								width="104"
@@ -259,7 +259,7 @@ const year = new Date().getFullYear();
 		<footer class="site-footer band">
 			<div class="frame site-footer__grid">
 				<div class="site-footer__brand">
-					<a href="/" class="brand">
+					<a href="/blog" class="brand">
 						{
 							siteLogo ? (
 								<img
@@ -269,7 +269,7 @@ const year = new Date().getFullYear();
 								/>
 							) : (
 								<img
-									src="/logo-goepi.png"
+									src="/blog/assets/logo-goepi-claro.png"
 									alt={siteTitle}
 									class="brand__logo"
 									width="104"
@@ -310,7 +310,7 @@ const year = new Date().getFullYear();
 					<h2 class="eyebrow">Acompanhe</h2>
 					<ul class="site-footer__links">
 						<li>
-							<a href="/rss.xml">
+							<a href="/blog/rss.xml">
 								<svg
 									viewBox="0 0 24 24"
 									fill="none"

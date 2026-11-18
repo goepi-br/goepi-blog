@@ -9,7 +9,20 @@
 	"vars": {
 		"EMDASH_SITE_URL": "https://blog.goepi.com.br",
 	},
-	"routes": [{ "pattern": "blog.goepi.com.br", "custom_domain": true }],
+	// O blog responde em goepi.com.br/blog. O resto de goepi.com.br continua
+	// no projeto Pages "goepi" (repositório goepi-br/website): estas rotas
+	// passam na frente dele só nos caminhos do blog e do EmDash.
+	"routes": [
+		{ "pattern": "blog.goepi.com.br", "custom_domain": true },
+		{ "pattern": "goepi.com.br/blog*", "zone_name": "goepi.com.br" },
+		{ "pattern": "goepi.com.br/_emdash/*", "zone_name": "goepi.com.br" },
+		{ "pattern": "goepi.com.br/_astro/*", "zone_name": "goepi.com.br" },
+		{ "pattern": "goepi.com.br/_image*", "zone_name": "goepi.com.br" },
+		{ "pattern": "goepi.com.br/_server-islands/*", "zone_name": "goepi.com.br" },
+		{ "pattern": "goepi.com.br/sitemap*", "zone_name": "goepi.com.br" },
+		{ "pattern": "goepi.com.br/robots.txt", "zone_name": "goepi.com.br" },
+		{ "pattern": "www.goepi.com.br/blog*", "zone_name": "goepi.com.br" },
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",
