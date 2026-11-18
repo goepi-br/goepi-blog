@@ -49,12 +49,12 @@ const postsWithTags = posts.map((post) => ({
 				posts.length === 0 ? (
 					<div class="empty-state">
 						<h2 class="empty-state__title">
-							{cursor ? "Não há mais artigos" : "No posts yet"}
+							{cursor ? "Não há mais artigos" : "Nenhum artigo ainda"}
 						</h2>
 						<p class="empty-state__text">
 							{cursor
-								? "You have reached the end of the archive."
-								: "Published posts will show up here."}
+								? "Você chegou ao fim do arquivo."
+								: "Os artigos publicados vão aparecer aqui."}
 						</p>
 						{cursor && (
 							<div class="empty-state__actions">
