@@ -4,6 +4,12 @@
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
 	"compatibility_flags": ["nodejs_compat"],
+	// Endereço público do blog. Precisa estar definido antes do primeiro acesso
+	// ao painel, porque as passkeys ficam presas a este endereço.
+	"vars": {
+		"EMDASH_SITE_URL": "https://blog.goepi.com.br",
+	},
+	"routes": [{ "pattern": "blog.goepi.com.br", "custom_domain": true }],
 	"d1_databases": [
 		{
 			"binding": "DB",
