@@ -34,7 +34,7 @@ const {
 } = Astro.props;
 
 const siteName = "Blog GoEPI";
-const fullTitle = title === siteName ? title : `${title} | ${siteName}`;
+const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 
 const pageCtx = createPublicPageContext({
 	Astro,

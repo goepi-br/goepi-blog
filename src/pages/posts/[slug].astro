@@ -56,7 +56,7 @@ const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes
 ---
 
 <GoepiLayout
-	title={seo.title || title}
+	title={title}
 	description={seo.description}
 	image={seo.ogImage}
 	canonical={seo.canonical}
@@ -75,7 +75,6 @@ const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
 				Voltar ao Blog
 			</a>
-			{category && <p class="article-category">{category.label}</p>}
 			<h1 {...post.edit.title}><span class="goepi-highlight-text">{highlight}</span>{rest && ` ${rest}`}</h1>
 			{
 				publishedAt && (
