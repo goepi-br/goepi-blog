@@ -1,194 +1,233 @@
 ---
+/**
+ * Página inicial do Blog GoEPI (homeBlog.pdf): busca, filtro por categoria,
+ * grade de artigos e paginação numerada. Tudo renderizado no servidor;
+ * os filtros usam a URL (?q=, ?categoria=, ?pagina=).
+ */
 import {
 	getEmDashCollection,
+	getTaxonomyTerms,
 	getTermsForEntries,
-	getSiteSettings,
+	search,
+	SearchUnavailableError,
 } from "emdash";
-import Base from "../layouts/Base.astro";
-import PostCard from "../components/PostCard.astro";
-import { resolveBlogSiteIdentity } from "../utils/site-identity";
+import GoepiLayout from "../layouts/GoepiLayout.astro";
+import GoepiCard from "../components/GoepiCard.astro";
+import { CATEGORY_ORDER, sortCategories } from "../utils/goepi";
 
-// Limit to what we render (1 featured + 6 grid). The DB does the slicing
-// instead of fetching every post and discarding the tail in JS.
-const POSTS_PER_PAGE = 7;
+const PER_PAGE = 9;
+const params = Astro.url.searchParams;
+const query = params.get("q")?.trim() ?? "";
+const categorySlug = params.get("categoria")?.trim() ?? "";
+const requestedPage = Math.max(1, Number.parseInt(params.get("pagina") ?? "1", 10) || 1);
 
-const [{ entries: posts, cacheHint }, settings] = await Promise.all([
-	getEmDashCollection("posts", {
+// Todos os artigos publicados (o blog é pequeno; paginamos em memória para
+// mostrar o total e as páginas numeradas, como no layout).
+const posts = [];
+let cursor: string | undefined;
+for (let i = 0; i < 20; i++) {
+	const result = await getEmDashCollection("posts", {
 		orderBy: { published_at: "desc" },
-		limit: POSTS_PER_PAGE + 1, // +1 to detect "view all" need
-	}),
-	getSiteSettings(),
-]);
-const { siteTitle, siteTagline } = resolveBlogSiteIdentity(settings);
+		limit: 100,
+		cursor,
+	});
+	if (Astro.cache?.enabled) Astro.cache.set(result.cacheHint);
+	posts.push(...result.entries);
+	if (!result.nextCursor) break;
+	cursor = result.nextCursor;
+}
 
-if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+const categoriesByEntry = await getTermsForEntries(
+	"posts",
+	posts.map((post) => post.data.id),
+	"category",
+);
 
-// Trim the lookahead post used to detect overflow
-const visiblePosts = posts.slice(0, POSTS_PER_PAGE);
-const hasMorePosts = posts.length > POSTS_PER_PAGE;
+// Categorias: as do blog GoEPI sempre aparecem; outras, só se tiverem artigos.
+const allCategories = await getTaxonomyTerms("category");
+const usedCategoryIds = new Set(
+	[...categoriesByEntry.values()].flat().map((term) => term.slug),
+);
+const categories = sortCategories(
+	allCategories.filter(
+		(term) => CATEGORY_ORDER.includes(term.label) || usedCategoryIds.has(term.slug),
+	),
+);
+const activeCategory = categories.find((term) => term.slug === categorySlug) ?? null;
 
-// Find the first post with a featured image for the hero
-const featuredPost = visiblePosts.find((p) => p.data.featured_image);
-const featuredIndex = featuredPost ? visiblePosts.indexOf(featuredPost) : -1;
+const normalize = (value: string) =>
+	value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-// Get remaining posts (exclude featured if found, limit to 6 for grid)
-const gridPosts = visiblePosts
-	.filter((_, i) => i !== featuredIndex)
-	.slice(0, 6);
+// Busca: texto completo do EmDash (quando disponível) + título e resumo.
+let searchSlugs: Set<string> | null = null;
+if (query) {
+	searchSlugs = new Set();
+	try {
+		const response = await search(query, { collections: ["posts"], limit: 100 });
+		for (const item of response.items) {
+			if (item.slug) searchSlugs.add(item.slug);
+			if (item.id) searchSlugs.add(item.id);
+		}
+	} catch (error) {
+		if (!(error instanceof SearchUnavailableError)) throw error;
+	}
+	const needle = normalize(query);
+	for (const post of posts) {
+		const haystack = normalize(`${post.data.title ?? ""} ${post.data.excerpt ?? ""}`);
+		if (haystack.includes(needle)) searchSlugs.add(post.id);
+	}
+}
 
-// Single batched query for tags across the featured post + grid posts.
-// Avoids the N+1 pattern of calling getEntryTerms() per entry.
-// Bylines are already hydrated on entry.data.bylines by getEmDashCollection.
-const tagEntryIds = [
-	...(featuredPost ? [featuredPost.data.id] : []),
-	...gridPosts.map((p) => p.data.id),
-];
-const tagsByEntry = await getTermsForEntries("posts", tagEntryIds, "tag");
+const filtered = posts.filter((post) => {
+	if (searchSlugs && !searchSlugs.has(post.id) && !searchSlugs.has(post.data.id)) return false;
+	if (activeCategory) {
+		const terms = categoriesByEntry.get(post.data.id) ?? [];
+		if (!terms.some((term) => term.slug === activeCategory.slug)) return false;
+	}
+	return true;
+});
 
-const featuredTags = featuredPost
-	? (tagsByEntry.get(featuredPost.data.id) ?? []).map((t) => ({
-			slug: t.slug,
-			label: t.label,
-		}))
-	: [];
+const total = filtered.length;
+const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+const page = Math.min(requestedPage, totalPages);
+const pagePosts = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-const gridPostsWithTags = gridPosts.map((post) => ({
-	post,
-	tags: (tagsByEntry.get(post.data.id) ?? []).map((t) => ({
-		slug: t.slug,
-		label: t.label,
-	})),
-}));
+function buildUrl(changes: { q?: string; categoria?: string; pagina?: number }) {
+	const next = new URLSearchParams();
+	const q = changes.q ?? query;
+	const categoria = changes.categoria ?? categorySlug;
+	const pagina = changes.pagina ?? 1;
+	if (q) next.set("q", q);
+	if (categoria) next.set("categoria", categoria);
+	if (pagina > 1) next.set("pagina", String(pagina));
+	const qs = next.toString();
+	return qs ? `/?${qs}` : "/";
+}
+
+const description =
+	"Acompanhe novidades, atualizações, dicas, treinamentos e conteúdos relevantes para aproveitar melhor a plataforma GoEPI.";
 ---
 
-<Base title={siteTitle} description={siteTagline}>
-	<header class="band intro">
-		<div class="frame home-intro">
-			<div>
-				<p class="eyebrow">Blog GoEPI</p>
-				<h1 class="intro__title">{siteTitle}</h1>
-				{siteTagline && <p class="intro__subtitle">{siteTagline}</p>}
-			</div>
-			<a
-				href="/rss.xml"
-				type="application/rss+xml"
-				class="btn btn--ghost btn--sm home-intro__rss"
-			>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.75"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true"
-				>
-					<path d="M4 11a9 9 0 0 1 9 9"></path>
-					<path d="M4 4a16 16 0 0 1 16 16"></path>
-					<circle cx="5" cy="19" r="1"></circle>
-				</svg>
-				Feed RSS
-			</a>
+<GoepiLayout title="Blog GoEPI" description={description}>
+	<section class="blog-hero">
+		<div class="blog-hero__glow" aria-hidden="true"></div>
+		<div class="container blog-hero__inner">
+			<h1>Blog GoEPI</h1>
+			<p>
+				Acompanhe novidades, atualizações, dicas, treinamentos e <strong>conteúdos relevantes</strong> para
+				aproveitar melhor a plataforma.
+			</p>
 		</div>
-	</header>
+	</section>
 
-	{
-		posts.length === 0 ? (
-			<section class="band section">
-				<div class="frame">
-					<div class="empty-state">
-						<h2 class="empty-state__title">Nenhum artigo ainda</h2>
-						<p class="empty-state__text">
-							Crie o primeiro artigo no painel de administração.
-						</p>
-						<div class="empty-state__actions">
-							<a href="/_emdash/admin/content/posts/new" class="btn">
-								Criar artigo
+	<section class="blog-listing" aria-labelledby="blog-results-title">
+		<div class="container">
+			<div class="blog-toolbar">
+				<form class="blog-search" action="/" method="get" role="search" id="blog-search-form">
+					<label for="blog-search" class="sr-only">Buscar artigos</label>
+					<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.15a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+					<input
+						id="blog-search"
+						name="q"
+						type="search"
+						value={query}
+						placeholder="Buscar artigos por título, palavra-chave ou assunto..."
+						autocomplete="off"
+					/>
+					{categorySlug && <input type="hidden" name="categoria" value={categorySlug} />}
+					<button type="submit">Buscar</button>
+				</form>
+				<nav class="blog-filters" aria-label="Filtrar artigos por categoria">
+					<a
+						class:list={["blog-filter", { "is-active": !activeCategory }]}
+						href={buildUrl({ categoria: "" })}
+						aria-current={!activeCategory ? "page" : undefined}>Todos</a
+					>
+					{
+						categories.map((term) => (
+							<a
+								class:list={["blog-filter", { "is-active": activeCategory?.slug === term.slug }]}
+								href={buildUrl({ categoria: term.slug })}
+								aria-current={activeCategory?.slug === term.slug ? "page" : undefined}
+							>
+								{term.label}
 							</a>
-						</div>
+						))
+					}
+				</nav>
+			</div>
+
+			<p class="blog-result-count" id="blog-results-title" aria-live="polite">
+				{total} {total === 1 ? "artigo encontrado" : "artigos encontrados"}
+			</p>
+
+			{
+				pagePosts.length === 0 && (
+					<div class="blog-status is-empty" role="status">
+						Nenhum artigo foi encontrado. Tente outra busca ou categoria.
 					</div>
-				</div>
-			</section>
-		) : (
-			<>
-				{featuredPost && (
-					<section class="band section">
-						<div class="frame">
-							<PostCard
-								post={featuredPost}
-								tags={featuredTags}
-								variant="feature"
-								headingLevel={2}
-								priority
-							/>
-						</div>
-					</section>
-				)}
+				)
+			}
 
-				{gridPostsWithTags.length > 0 && (
-					<section class="band section" aria-labelledby="latest-posts">
-						<div class="frame">
-							<div class="section-head">
-								<h2 id="latest-posts" class="section-head__title">
-									Últimos artigos
-								</h2>
-								{hasMorePosts && (
-									<a href="/posts" class="arrow-link">
-										Ver todos<span class="sr-only"> os artigos</span>
-										<svg
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="1.75"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											aria-hidden="true"
-										>
-											<path d="M5 12h14" />
-											<path d="m12 5 7 7-7 7" />
-										</svg>
-									</a>
-								)}
-							</div>
-							<div class="post-grid">
-								{gridPostsWithTags.map(({ post, tags }) => (
-									<PostCard
-										post={post}
-										tags={tags}
-										variant="card"
-										headingLevel={3}
-									/>
-								))}
-							</div>
-						</div>
-					</section>
-				)}
-			</>
-		)
-	}
-</Base>
+			<div class="blog-grid">
+				{
+					pagePosts.map((post) => (
+						<GoepiCard
+							slug={post.id}
+							title={post.data.title || "Sem título"}
+							excerpt={post.data.excerpt}
+							image={post.data.featured_image}
+							category={(categoriesByEntry.get(post.data.id) ?? [])[0]?.label ?? null}
+							date={post.data.publishedAt ?? null}
+						/>
+					))
+				}
+			</div>
 
-<style>
-	.home-intro {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: end;
-		gap: var(--spacing-6) var(--spacing-8);
-	}
+			{
+				totalPages > 1 && (
+					<nav class="blog-pagination" aria-label="Paginação do blog">
+						{page > 1 ? (
+							<a href={buildUrl({ pagina: page - 1 })} aria-label="Página anterior">‹</a>
+						) : (
+							<span class="is-disabled" aria-hidden="true">‹</span>
+						)}
+						{Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+							<a
+								href={buildUrl({ pagina: n })}
+								class:list={{ "is-current": n === page }}
+								aria-current={n === page ? "page" : undefined}
+							>
+								{n}
+							</a>
+						))}
+						{page < totalPages ? (
+							<a href={buildUrl({ pagina: page + 1 })} aria-label="Próxima página">›</a>
+						) : (
+							<span class="is-disabled" aria-hidden="true">›</span>
+						)}
+					</nav>
+				)
+			}
+		</div>
+	</section>
 
-	/* Lifts the pill from the line box's bottom onto the last line's baseline */
-	.home-intro__rss {
-		margin-block-end: var(--spacing-2);
-	}
-
-	@media (max-width: 720px) {
-		.home-intro {
-			grid-template-columns: minmax(0, 1fr);
-		}
-
-		.home-intro__rss {
-			justify-self: start;
-			margin-block-end: 0;
-		}
-	}
-</style>
+	<script is:inline>
+		// Busca enquanto digita (envia o formulário após uma pausa).
+		(function () {
+			var form = document.getElementById("blog-search-form");
+			var input = document.getElementById("blog-search");
+			if (!form || !input) return;
+			var timer;
+			input.addEventListener("input", function () {
+				clearTimeout(timer);
+				timer = setTimeout(function () { form.requestSubmit(); }, 500);
+			});
+			if (input.value) {
+				input.focus();
+				var len = input.value.length;
+				input.setSelectionRange(len, len);
+			}
+		})();
+	</script>
+</GoepiLayout>
