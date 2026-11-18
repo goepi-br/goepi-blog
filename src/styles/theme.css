@@ -68,7 +68,7 @@
 }
 
 .site-header {
-	background: color-mix(in srgb, var(--goepi-navy) 92%, transparent);
+	background: var(--goepi-navy);
 }
 
 .site-footer {
