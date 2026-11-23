@@ -33,6 +33,8 @@ const {
 } = Astro.props;
 
 const siteName = "Blog GoEPI";
+/** Imagem de compartilhamento padrão (a mesma do site), quando o post não tem capa. */
+const shareImage = image || "https://goepi.com.br/assets/og/goepi-og.jpg";
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 
 const pageCtx = createPublicPageContext({
@@ -43,9 +45,9 @@ const pageCtx = createPublicPageContext({
 	pageTitle: title,
 	description,
 	canonical,
-	image,
+	image: shareImage,
 	content,
-	seo: { ogImage: image, robots },
+	seo: { ogImage: shareImage, robots },
 	articleMeta: { publishedTime, modifiedTime },
 	siteName,
 });
@@ -58,6 +60,10 @@ const pageCtx = createPublicPageContext({
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{fullTitle}</title>
 		<EmDashHead page={pageCtx} />
+		<meta name="theme-color" content="#040A1F" />
+		<link rel="icon" href="/favicon.ico" sizes="48x48" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="alternate" type="application/rss+xml" title="Feed RSS do Blog GoEPI" href="/blog/rss.xml" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -74,7 +80,7 @@ const pageCtx = createPublicPageContext({
 				<a href="/" class="navbar__logo"><img src="/blog/assets/logo-goepi.png" alt="GoEPI" height="32" /></a>
 				<nav class="navbar__links" aria-label="Navegação principal">
 					<a href="/#fluxo">Como funciona</a>
-					<a href="/about.html">Nossa história</a>
+					<a href="/about">Nossa história</a>
 					<a href="/#suporte">Perguntas Frequentes</a>
 					<a href="/blog" aria-current="page">Blog</a>
 				</nav>
