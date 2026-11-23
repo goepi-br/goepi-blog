@@ -23,7 +23,9 @@
 		{ "pattern": "goepi.com.br/_server-islands/*", "zone_name": "goepi.com.br" },
 		{ "pattern": "goepi.com.br/sitemap*", "zone_name": "goepi.com.br" },
 		{ "pattern": "goepi.com.br/robots.txt", "zone_name": "goepi.com.br" },
-		{ "pattern": "www.goepi.com.br/blog*", "zone_name": "goepi.com.br" },
+		// www.goepi.com.br inteiro passa por aqui só para ser redirecionado (301)
+		// para goepi.com.br: assim o Google não vê o site duplicado em dois endereços.
+		{ "pattern": "www.goepi.com.br/*", "zone_name": "goepi.com.br" },
 	],
 	"d1_databases": [
 		{
