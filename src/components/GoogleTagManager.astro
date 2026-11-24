@@ -1,6 +1,6 @@
 ---
 /**
- * Google Tag Manager (GTM-TP9DTW3V), igual ao site goepi.com.br.
+ * Google Tag Manager (GTM-TP9DTW3V e GTM-KRK27DTW), igual ao site goepi.com.br.
  * Carrega na primeira interação (rolar, tocar, clicar, teclar) ou 3,5 s depois
  * da página pronta, para não atrasar a primeira tela.
  * Vai no <head>; o <GoogleTagManagerNoscript /> vai logo após o <body>.
@@ -11,21 +11,23 @@
 	window.dataLayer = window.dataLayer || [];
 	function gtag() { dataLayer.push(arguments); }
 	gtag("js", new Date());
-	(function (w, d, id) {
+	(function (w, d, ids) {
 		var loaded = false;
 		function load() {
 			if (loaded) return;
 			loaded = true;
 			w.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-			var s = d.createElement("script");
-			s.async = true;
-			s.src = "https://www.googletagmanager.com/gtm.js?id=" + id;
-			d.head.appendChild(s);
+			ids.forEach(function (id) {
+				var s = d.createElement("script");
+				s.async = true;
+				s.src = "https://www.googletagmanager.com/gtm.js?id=" + id;
+				d.head.appendChild(s);
+			});
 		}
 		["scroll", "pointerdown", "keydown", "touchstart"].forEach(function (e) {
 			w.addEventListener(e, load, { once: true, passive: true });
 		});
 		if (d.readyState === "complete") setTimeout(load, 3500);
 		else w.addEventListener("load", function () { setTimeout(load, 3500); });
-	})(window, document, "GTM-TP9DTW3V");
+	})(window, document, ["GTM-TP9DTW3V", "GTM-KRK27DTW"]);
 </script>
