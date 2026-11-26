@@ -14,6 +14,7 @@ import {
 import GoepiLayout from "../../layouts/GoepiLayout.astro";
 import GoepiCard from "../../components/GoepiCard.astro";
 import { CATEGORY_ORDER, sortCategories } from "../../utils/goepi";
+import { buildBlogJsonLd } from "../../utils/blog-schema";
 
 const PER_PAGE = 9;
 const params = Astro.url.searchParams;
@@ -108,7 +109,7 @@ const description =
 	"Acompanhe novidades, atualizações, dicas, treinamentos e conteúdos relevantes para aproveitar melhor a plataforma GoEPI.";
 ---
 
-<GoepiLayout title="Blog GoEPI" description={description}>
+<GoepiLayout title="Blog GoEPI" description={description} jsonLd={buildBlogJsonLd(description)}>
 	<section class="blog-hero">
 		<div class="blog-hero__glow" aria-hidden="true"></div>
 		<div class="container blog-hero__inner">

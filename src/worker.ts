@@ -70,6 +70,29 @@ async function withSitePages(response: Response): Promise<Response> {
 	return new Response(patched, { status: response.status, headers });
 }
 
+/** Linha do robots.txt que aponta o resumo para assistentes de IA (/llms.txt do site). */
+const LLMS_TXT_LINE = `# Resumo para assistentes de IA: ${CANONICAL_ORIGIN}/llms.txt`;
+
+/**
+ * Acrescenta a linha do llms.txt ao robots.txt gerado pelo EmDash (padrão ou
+ * o personalizado no painel), logo antes da linha Sitemap.
+ */
+async function withLlmsTxt(response: Response): Promise<Response> {
+	if (!response.ok) return response;
+	const text = await response.text();
+	let patched = text;
+	if (!text.includes(LLMS_TXT_LINE)) {
+		const lines = text.split("\n");
+		const sitemapAt = lines.findIndex((line) => /^sitemap:/i.test(line.trim()));
+		if (sitemapAt >= 0) lines.splice(sitemapAt, 0, LLMS_TXT_LINE);
+		else lines.push(LLMS_TXT_LINE, "");
+		patched = lines.join("\n");
+	}
+	const headers = new Headers(response.headers);
+	headers.delete("content-length");
+	return new Response(patched, { status: response.status, headers });
+}
+
 export default {
 	...handler,
 	async fetch(request, env, ctx) {
@@ -79,6 +102,7 @@ export default {
 		if (url.pathname === "/sitemap-site.xml") return siteSitemap();
 		const response = await handler.fetch!(request, env, ctx);
 		if (url.pathname === "/sitemap.xml") return withSitePages(response);
+		if (url.pathname === "/robots.txt") return withLlmsTxt(response);
 		return response;
 	},
 	scheduled: createScheduledHandler(),

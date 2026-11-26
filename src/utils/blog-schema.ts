@@ -1,34 +1,116 @@
 /**
- * Dados estruturados (JSON-LD) da página de artigo do Blog GoEPI:
- * BlogPosting completo, BreadcrumbList e, quando o artigo tem a seção
- * "Perguntas frequentes", FAQPage com as mesmas perguntas e respostas
- * que aparecem na página.
+ * Dados estruturados (JSON-LD) do Blog GoEPI.
  *
- * Organization e Person usam os mesmos @id do site goepi.com.br
- * (index.html e about.html), para o Google ligar as entidades.
+ * Toda página do blog leva o Organization e o WebSite completos, iguais aos
+ * de src/index.html no repositório goepi-br/website e com os mesmos @id,
+ * para o Google ligar as entidades. A home do blog acrescenta o nó Blog e a
+ * página de artigo acrescenta BlogPosting, BreadcrumbList e, quando o artigo
+ * tem a seção "Perguntas frequentes", FAQPage com as mesmas perguntas e
+ * respostas que aparecem na página.
  */
 import { SITE_URL } from "./goepi";
 import { normalize } from "./blog-cta";
 
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
+export const BLOG_ID = `${SITE_URL}/blog#blog`;
 export const AUTHOR = {
 	"@type": "Person",
 	"@id": `${SITE_URL}/about#paulo-abdalla`,
 	name: "Paulo Abdalla",
 	url: "https://www.linkedin.com/in/pauloabdalla-gestaodeepis-goepi/",
 };
-export const PUBLISHER = {
+
+/** Cópia do nó Organization de src/index.html (goepi-br/website). Manter os dois iguais. */
+export const ORGANIZATION = {
 	"@type": "Organization",
 	"@id": ORGANIZATION_ID,
 	name: "GoEPI",
+	legalName: "GOEPI TECNOLOGIA LTDA",
+	taxID: "66.586.904/0001-59",
+	identifier: { "@type": "PropertyValue", propertyID: "CNPJ", value: "66.586.904/0001-59" },
 	url: `${SITE_URL}/`,
-	logo: {
-		"@type": "ImageObject",
-		url: `${SITE_URL}/icon-512.png`,
-		width: 512,
-		height: 512,
+	logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png`, width: 512, height: 512 },
+	description:
+		"Software de gestão de EPIs criado em 2026, que nasceu no ecossistema Kensys Group, que apoia a GoEPI. Registra cada entrega de EPI com reconhecimento facial, biometria ou assinatura digital, inclusive offline, controla estoque e validade de CA e gera relatórios para auditorias da NR-6.",
+	foundingDate: "2026",
+	address: {
+		"@type": "PostalAddress",
+		addressLocality: "São José dos Campos",
+		addressRegion: "SP",
+		addressCountry: "BR",
 	},
+	email: "contato@goepi.com.br",
+	telephone: "+55-12-99738-4873",
+	areaServed: { "@type": "Country", name: "Brasil" },
+	contactPoint: {
+		"@type": "ContactPoint",
+		contactType: "sales",
+		email: "contato@goepi.com.br",
+		telephone: "+55-12-99738-4873",
+		availableLanguage: "Portuguese",
+		areaServed: "BR",
+	},
+	founder: {
+		...AUTHOR,
+		jobTitle: "Fundador e Diretor Comercial",
+		email: "paulo.abdalla@goepi.com.br",
+		worksFor: { "@id": ORGANIZATION_ID },
+		sameAs: ["https://www.linkedin.com/in/pauloabdalla-gestaodeepis-goepi/"],
+	},
+	sameAs: [
+		"https://www.linkedin.com/company/goepi/",
+		"https://www.instagram.com/go.epi/",
+		"https://maps.google.com/maps?cid=5493879531777858719",
+	],
 };
+
+/** Cópia do nó WebSite de src/index.html (goepi-br/website). */
+export const WEBSITE = {
+	"@type": "WebSite",
+	"@id": WEBSITE_ID,
+	url: `${SITE_URL}/`,
+	name: "GoEPI",
+	inLanguage: "pt-BR",
+	publisher: { "@id": ORGANIZATION_ID },
+};
+
+/** Nó Blog da home do blog (o mesmo @id que BlogPosting.isPartOf usa). */
+export function buildBlogJsonLd(description?: string | null): Record<string, unknown> {
+	return {
+		"@context": "https://schema.org",
+		"@graph": [
+			{
+				"@type": "Blog",
+				"@id": BLOG_ID,
+				name: "Blog GoEPI",
+				url: `${SITE_URL}/blog`,
+				...(description ? { description } : {}),
+				inLanguage: "pt-BR",
+				isPartOf: { "@id": WEBSITE_ID },
+				publisher: { "@id": ORGANIZATION_ID },
+			},
+		],
+	};
+}
+
+/** Grafo final da página: Organization e WebSite primeiro, depois os nós da página. */
+export function withSiteGraph(jsonLd?: Record<string, unknown> | null): Record<string, unknown> {
+	const graph = jsonLd?.["@graph"];
+	const nodes = Array.isArray(graph) ? graph : jsonLd ? [jsonLd] : [];
+	return {
+		"@context": "https://schema.org",
+		"@graph": [
+			ORGANIZATION,
+			WEBSITE,
+			...nodes.map((n) => {
+				const { "@context": _ctx, ...rest } = n as Record<string, unknown>;
+				return rest;
+			}),
+		],
+	};
+}
+
 const DEFAULT_IMAGE = `${SITE_URL}/assets/og/goepi-og.jpg`;
 const INTERNAL_MEDIA_PREFIX = "/_emdash/api/media/file/";
 
@@ -143,9 +225,9 @@ export function buildPostJsonLd(input: PostSchemaInput): Record<string, unknown>
 			...(modified ? { dateModified: modified } : {}),
 			inLanguage: "pt-BR",
 			author: AUTHOR,
-			publisher: PUBLISHER,
+			publisher: { "@id": ORGANIZATION_ID },
 			mainEntityOfPage: { "@type": "WebPage", "@id": url },
-			isPartOf: { "@type": "Blog", "@id": `${SITE_URL}/blog#blog`, name: "Blog GoEPI", url: `${SITE_URL}/blog` },
+			isPartOf: { "@type": "Blog", "@id": BLOG_ID, name: "Blog GoEPI", url: `${SITE_URL}/blog` },
 		},
 		{
 			"@type": "BreadcrumbList",
