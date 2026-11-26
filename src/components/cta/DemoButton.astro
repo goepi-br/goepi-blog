@@ -1,0 +1,57 @@
+---
+/**
+ * Botão "Agendar demonstração" igual ao CTA da navbar (GoepiLayout.astro):
+ * btn btn--yellow com o círculo e a seta, no tamanho médio da navbar.
+ * `data-cta-*` alimenta o evento cta_click (ver [slug].astro).
+ */
+import { DEMO_HREF, DEMO_LABEL, type CtaPosition } from "../../utils/blog-cta";
+
+interface Props {
+	position: CtaPosition;
+	variant: string;
+}
+
+const { position, variant } = Astro.props;
+---
+
+<a
+	href={DEMO_HREF}
+	class="btn btn--yellow goepi-cta-btn"
+	data-cta-position={position}
+	data-cta-variant={variant}
+	>{DEMO_LABEL} <span class="btn__circle btn__circle--yellow2" aria-hidden="true"
+		><img src="/blog/assets/arrow-right.png" alt="" width="14" height="14" /></span
+	></a
+>
+
+<style>
+	/* Seletores com .btn.btn--yellow para vencer ".article-content a" (azul sublinhado). */
+	a.btn.goepi-cta-btn {
+		height: 44px;
+		padding: 0 24px;
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--navy);
+		text-decoration: none;
+	}
+	a.btn.goepi-cta-btn:focus-visible {
+		outline: 2px solid var(--blue-brand);
+		outline-offset: 3px;
+	}
+	a.btn.goepi-cta-btn .btn__circle {
+		width: 22px;
+		height: 22px;
+	}
+	a.btn.goepi-cta-btn .btn__circle img {
+		width: 14px;
+		height: 14px;
+		margin: 0;
+		border-radius: 0;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		a.btn.goepi-cta-btn,
+		a.btn.goepi-cta-btn:hover {
+			transform: none;
+		}
+	}
+</style>

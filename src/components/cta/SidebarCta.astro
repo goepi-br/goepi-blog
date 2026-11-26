@@ -1,0 +1,72 @@
+---
+/**
+ * Card de CTA fixo ao lado do artigo, só no desktop (>= 1100px).
+ * A visibilidade e o sticky ficam no grid da página ([slug].astro).
+ */
+import DemoButton from "./DemoButton.astro";
+
+interface Props {
+	variant: string;
+}
+
+const { variant } = Astro.props;
+---
+
+<div class="sidebar-cta">
+	<span class="sidebar-cta__ring" aria-hidden="true"></span>
+	<span class="sidebar-cta__radar" aria-hidden="true"></span>
+	<p class="sidebar-cta__title">Gestão de EPI com <strong>rastreabilidade de ponta a ponta.</strong></p>
+	<p class="sidebar-cta__text">Entrega, estoque e histórico no mesmo fluxo, prontos para auditoria.</p>
+	<DemoButton position="sidebar" variant={variant} />
+</div>
+
+<style>
+	.sidebar-cta {
+		position: relative;
+		overflow: hidden;
+		padding: 28px 24px 26px;
+		border-radius: 14px;
+		background: var(--navy);
+		box-shadow: 0 18px 40px rgba(4, 10, 31, 0.16);
+		font-family: var(--font);
+		isolation: isolate;
+	}
+	.sidebar-cta__ring,
+	.sidebar-cta__radar {
+		position: absolute;
+		z-index: -1;
+		pointer-events: none;
+		border-radius: 50%;
+	}
+	.sidebar-cta__ring {
+		top: -80px;
+		right: -80px;
+		width: 190px;
+		height: 190px;
+		border: 26px solid rgba(19, 61, 227, 0.55);
+	}
+	.sidebar-cta__radar {
+		right: -70px;
+		bottom: -110px;
+		width: 220px;
+		height: 220px;
+		background: conic-gradient(from 200deg, rgba(250, 209, 30, 0.32) 0deg, rgba(250, 209, 30, 0) 70deg, transparent 360deg);
+	}
+	.sidebar-cta__title {
+		margin: 0 0 10px;
+		color: var(--white);
+		font-size: 1.3rem;
+		font-weight: 700;
+		line-height: 1.25;
+	}
+	.sidebar-cta__title strong {
+		color: var(--yellow);
+		font-weight: 700;
+	}
+	.sidebar-cta__text {
+		margin: 0 0 20px;
+		color: #c8cbd7;
+		font-size: 0.95rem;
+		line-height: 1.5;
+	}
+</style>

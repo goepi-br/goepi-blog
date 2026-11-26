@@ -1,0 +1,81 @@
+---
+/**
+ * "Resumir este artigo com": links para ChatGPT, Claude, Perplexity e Gemini
+ * com o prompt pronto e a URL canônica do artigo. Dispara ai_summary_click.
+ */
+interface Props {
+	url: string;
+}
+
+const { url } = Astro.props;
+const prompt = encodeURIComponent(`Resuma o conteúdo deste artigo da GoEPI e cite a fonte: ${url}`);
+const tools = [
+	{ id: "chatgpt", label: "ChatGPT", href: `https://chatgpt.com/?q=${prompt}` },
+	{ id: "claude", label: "Claude", href: `https://claude.ai/new?q=${prompt}` },
+	{ id: "perplexity", label: "Perplexity", href: `https://www.perplexity.ai/search?q=${prompt}` },
+	{ id: "gemini", label: "Gemini", href: `https://gemini.google.com/app?q=${prompt}` },
+];
+---
+
+<nav class="ai-summary" aria-label="Resumir este artigo com inteligência artificial">
+	<span class="ai-summary__label">Resumir este artigo com</span>
+	<ul class="ai-summary__list">
+		{
+			tools.map((t) => (
+				<li>
+					<a class="ai-summary__link" href={t.href} target="_blank" rel="noopener nofollow" data-ai-tool={t.id}>
+						{t.label}
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</nav>
+
+<style>
+	.ai-summary {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px 14px;
+		margin: -0.6rem 0 2rem;
+		font-family: var(--font);
+	}
+	.ai-summary__label {
+		color: #59668c;
+		font-size: 0.86rem;
+		font-weight: 500;
+	}
+	.ai-summary .ai-summary__list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.ai-summary a.ai-summary__link {
+		display: inline-flex;
+		align-items: center;
+		height: 30px;
+		padding: 0 13px;
+		border: 1px solid #d6deec;
+		border-radius: 999px;
+		background: #f3f6fa;
+		color: #1b2740;
+		font-size: 0.82rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+	}
+	.ai-summary a.ai-summary__link:hover,
+	.ai-summary a.ai-summary__link:focus-visible {
+		border-color: var(--blue-brand);
+		background: rgba(20, 62, 229, 0.08);
+		color: var(--blue-brand);
+	}
+	.ai-summary a.ai-summary__link:focus-visible {
+		outline: 2px solid var(--blue-brand);
+		outline-offset: 2px;
+	}
+</style>
