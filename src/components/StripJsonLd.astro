@@ -1,0 +1,26 @@
+---
+/**
+ * Renderiza o conteúdo do slot (o <EmDashHead />) sem os blocos JSON-LD dos
+ * tipos indicados. Usado quando a página gera o próprio BlogPosting completo
+ * (src/utils/blog-schema.ts), para não haver dois BlogPosting no <head>.
+ */
+interface Props {
+	types: string[];
+}
+
+const { types } = Astro.props;
+let html = await Astro.slots.render("default");
+if (types.length > 0) {
+	html = html.replace(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g, (tag, body) => {
+		try {
+			const json = JSON.parse(body);
+			const type = json?.["@type"];
+			return typeof type === "string" && types.includes(type) ? "" : tag;
+		} catch {
+			return tag;
+		}
+	});
+}
+---
+
+<Fragment set:html={html} />
