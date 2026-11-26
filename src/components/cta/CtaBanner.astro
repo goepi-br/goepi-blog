@@ -1,0 +1,268 @@
+---
+/**
+ * Banner de CTA no meio do artigo, em HTML/CSS (não é imagem: acessível e
+ * indexável). Inspirado no banner do blog da Kensys, na identidade GoEPI:
+ * - tone "dark": painel navy com o anel azul e a fatia de radar amarela;
+ * - tone "light": fundo #F3F6FA, texto navy, destaques em azul, com o
+ *   botão do WhatsApp ao lado do botão de demonstração.
+ */
+import DemoButton from "./DemoButton.astro";
+import { WHATSAPP_HREF, type CtaPosition, type CtaVariant } from "../../utils/blog-cta";
+
+interface Props {
+	position: CtaPosition;
+	tone: "dark" | "light";
+	variant: CtaVariant;
+}
+
+const { position, tone, variant } = Astro.props;
+const label = variant.headline.map((p) => p.text).join("");
+---
+
+<aside class:list={["cta-banner", `cta-banner--${tone}`]} aria-label={label}>
+	<div class="cta-banner__media" aria-hidden="true">
+		{
+			tone === "dark" && (
+				<img
+					class="cta-banner__photo"
+					src="/blog/assets/cta/foto-trabalhador-campo-720.webp"
+					alt=""
+					width="720"
+					height="405"
+					loading="lazy"
+					decoding="async"
+				/>
+			)
+		}
+		<img
+			class="cta-banner__screen"
+			src="/blog/assets/cta/hero-dashboard-tablet-700.webp"
+			alt=""
+			width="700"
+			height="505"
+			loading="lazy"
+			decoding="async"
+		/>
+	</div>
+	<div class="cta-banner__panel">
+		<span class="cta-banner__ring" aria-hidden="true"></span>
+		<span class="cta-banner__radar" aria-hidden="true"></span>
+		<p class="cta-banner__title">
+			{variant.headline.map((p) => (p.highlight ? <strong>{p.text}</strong> : p.text))}
+		</p>
+		<p class="cta-banner__support">{variant.support}</p>
+		<div class="cta-banner__actions">
+			<DemoButton position={position} variant={variant.key} />
+			{
+				tone === "light" && (
+					<a
+						href={WHATSAPP_HREF}
+						class="btn btn--outline-blue cta-banner__whatsapp"
+						target="_blank"
+						rel="noopener"
+					>
+						Falar no WhatsApp
+					</a>
+				)
+			}
+		</div>
+	</div>
+</aside>
+
+<style>
+	.cta-banner {
+		position: relative;
+		display: grid;
+		grid-template-columns: 40% 60%;
+		min-height: 200px;
+		margin: 2.6rem 0;
+		overflow: hidden;
+		border-radius: 14px;
+		font-family: var(--font);
+		line-height: 1.3;
+		isolation: isolate;
+	}
+	.cta-banner--dark {
+		background: var(--navy);
+		box-shadow: 0 18px 40px rgba(4, 10, 31, 0.18);
+	}
+	.cta-banner--light {
+		grid-template-columns: 34% 66%;
+		background: #f3f6fa;
+		border: 1px solid #dfe6f1;
+	}
+
+	/* Lado esquerdo: foto + tela do sistema */
+	.cta-banner__media {
+		position: relative;
+		min-height: 200px;
+		overflow: hidden;
+	}
+	.cta-banner--dark .cta-banner__media {
+		background: #0a1640;
+	}
+	.cta-banner--light .cta-banner__media {
+		background: radial-gradient(circle at 30% 70%, rgba(19, 61, 227, 0.16), transparent 60%), #e6ecf6;
+	}
+	.cta-banner .cta-banner__photo {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		border-radius: 0;
+		object-fit: cover;
+		object-position: 35% 30%;
+	}
+	.cta-banner--dark .cta-banner__media::after {
+		/* funde a foto com o painel navy */
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(90deg, rgba(4, 10, 31, 0.05) 40%, var(--navy) 100%);
+	}
+	.cta-banner .cta-banner__screen {
+		position: absolute;
+		z-index: 1;
+		right: -6%;
+		bottom: -14%;
+		width: 74%;
+		height: auto;
+		margin: 0;
+		border-radius: 0;
+		filter: drop-shadow(0 12px 24px rgba(4, 10, 31, 0.45));
+	}
+	.cta-banner--light .cta-banner__screen {
+		right: auto;
+		left: 50%;
+		top: 50%;
+		bottom: auto;
+		width: 96%;
+		transform: translate(-50%, -42%);
+		filter: drop-shadow(0 12px 24px rgba(4, 10, 31, 0.18));
+	}
+
+	/* Lado direito: pergunta, apoio e botões */
+	.cta-banner__panel {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 10px;
+		padding: 28px 32px 28px 28px;
+		overflow: hidden;
+	}
+	.cta-banner__ring,
+	.cta-banner__radar {
+		position: absolute;
+		z-index: -1;
+		pointer-events: none;
+	}
+	.cta-banner__ring {
+		right: -110px;
+		bottom: -150px;
+		width: 260px;
+		height: 260px;
+		border: 32px solid rgba(19, 61, 227, 0.5);
+		border-radius: 50%;
+	}
+	.cta-banner__radar {
+		top: -130px;
+		right: -90px;
+		width: 260px;
+		height: 260px;
+		border-radius: 50%;
+		background: conic-gradient(from 160deg, rgba(250, 209, 30, 0.34) 0deg, rgba(250, 209, 30, 0) 75deg, transparent 360deg);
+	}
+	.cta-banner--light .cta-banner__ring {
+		border-color: rgba(19, 61, 227, 0.12);
+	}
+	.cta-banner--light .cta-banner__radar {
+		background: conic-gradient(from 160deg, rgba(19, 61, 227, 0.14) 0deg, rgba(19, 61, 227, 0) 70deg, transparent 360deg);
+	}
+
+	.cta-banner .cta-banner__title {
+		margin: 0;
+		font-size: clamp(1.25rem, 2.1vw, 1.6rem);
+		font-weight: 700;
+		line-height: 1.22;
+		letter-spacing: -0.01em;
+	}
+	.cta-banner--dark .cta-banner__title {
+		color: var(--white);
+	}
+	.cta-banner--dark .cta-banner__title strong {
+		color: var(--yellow);
+		font-weight: 700;
+	}
+	.cta-banner--light .cta-banner__title {
+		color: var(--navy);
+	}
+	.cta-banner--light .cta-banner__title strong {
+		color: var(--blue);
+		font-weight: 700;
+	}
+	.cta-banner .cta-banner__support {
+		margin: 0 0 6px;
+		font-size: 0.98rem;
+		font-weight: 400;
+		line-height: 1.45;
+	}
+	.cta-banner--dark .cta-banner__support {
+		color: #c8cbd7;
+	}
+	.cta-banner--light .cta-banner__support {
+		color: #4f5b70;
+	}
+	.cta-banner__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+	.cta-banner a.btn.cta-banner__whatsapp {
+		height: 44px;
+		padding: 0 22px;
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--navy);
+		text-decoration: none;
+	}
+	.cta-banner a.btn.cta-banner__whatsapp:focus-visible {
+		outline: 2px solid var(--blue-brand);
+		outline-offset: 3px;
+	}
+
+	@media (max-width: 640px) {
+		.cta-banner {
+			grid-template-columns: 1fr;
+		}
+		.cta-banner__media {
+			min-height: 0;
+			aspect-ratio: 16 / 8;
+		}
+		.cta-banner--dark .cta-banner__media::after {
+			background: linear-gradient(180deg, rgba(4, 10, 31, 0.05) 45%, var(--navy) 100%);
+		}
+		.cta-banner .cta-banner__screen {
+			width: 62%;
+			right: -4%;
+			bottom: -22%;
+		}
+		.cta-banner--light {
+			grid-template-columns: 1fr;
+		}
+		.cta-banner--light .cta-banner__screen {
+			width: 74%;
+			top: auto;
+			bottom: -24%;
+			transform: translateX(-50%);
+		}
+		.cta-banner__panel {
+			padding: 22px 20px 24px;
+		}
+		.cta-banner__actions :global(.btn) {
+			width: 100%;
+		}
+	}
+</style>

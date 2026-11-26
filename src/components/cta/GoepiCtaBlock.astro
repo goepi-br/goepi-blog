@@ -1,0 +1,33 @@
+---
+/**
+ * Bloco de Portable Text `goepiCta`, inserido por injectCtas() em
+ * src/utils/blog-cta.ts: botão de demonstração ou banner.
+ */
+import DemoButton from "./DemoButton.astro";
+import CtaBanner from "./CtaBanner.astro";
+import type { CtaNode } from "../../utils/blog-cta";
+
+interface Props {
+	node: CtaNode;
+}
+
+const { node } = Astro.props;
+---
+
+{
+	node.kind === "button" ? (
+		<p class="goepi-cta-line">
+			<DemoButton position={node.position} variant={node.variant.key} />
+		</p>
+	) : (
+		<CtaBanner position={node.position} tone={node.tone ?? "dark"} variant={node.variant} />
+	)
+}
+
+<style>
+	.goepi-cta-line {
+		display: flex;
+		justify-content: flex-start;
+		margin: 1.9rem 0 2.1rem;
+	}
+</style>

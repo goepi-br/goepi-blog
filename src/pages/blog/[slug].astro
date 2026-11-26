@@ -9,11 +9,16 @@ import {
 	getTermsForEntries,
 	getSeoMeta,
 	decodeSlug,
+	getEditMeta,
 } from "emdash";
 import { PortableText } from "emdash/ui";
 import GoepiLayout from "../../layouts/GoepiLayout.astro";
 import GoepiCard from "../../components/GoepiCard.astro";
-import { formatShortDate, imageUrl, splitTitle, FALLBACK_IMAGE } from "../../utils/goepi";
+import GoepiCtaBlock from "../../components/cta/GoepiCtaBlock.astro";
+import SidebarCta from "../../components/cta/SidebarCta.astro";
+import AiSummary from "../../components/cta/AiSummary.astro";
+import { formatShortDate, imageUrl, splitTitle, FALLBACK_IMAGE, SITE_URL } from "../../utils/goepi";
+import { injectCtas, pickVariant } from "../../utils/blog-cta";
 
 const slug = decodeSlug(Astro.params.slug);
 if (!slug) return Astro.rewrite("/404");
@@ -33,6 +38,15 @@ const seo = getSeoMeta(post, {
 	path: Astro.url.pathname.replace(/\/$/, ""),
 	defaultOgImage: heroImage === FALLBACK_IMAGE ? undefined : absoluteImage,
 });
+
+// CTAs de conversão (src/utils/blog-cta.ts). No modo de edição o conteúdo
+// vai intacto para o editor do EmDash.
+const ctaVariant = pickVariant(title, slug);
+const content = getEditMeta(post.data.content)
+	? post.data.content
+	: (injectCtas(post.data.content, ctaVariant) as typeof post.data.content);
+const ptComponents = { type: { goepiCta: GoepiCtaBlock } };
+const articleUrl = `${SITE_URL}/blog/${slug}`;
 
 const category = (post.data.terms?.category ?? [])[0] ?? null;
 const publishedAt = post.data.publishedAt ?? null;
@@ -88,10 +102,16 @@ const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes
 	</section>
 
 	<section class="article-content-section">
-		<article class="article-content">
-			{post.data.excerpt && <p class="article-lead" {...post.edit.excerpt}>{post.data.excerpt}</p>}
-			<PortableText value={post.data.content} />
-		</article>
+		<div class="article-layout">
+			<article class="article-content">
+				{post.data.excerpt && <p class="article-lead" {...post.edit.excerpt}>{post.data.excerpt}</p>}
+				<AiSummary url={articleUrl} />
+				<PortableText value={content} components={ptComponents} />
+			</article>
+			<aside class="article-sidebar" aria-label="Agende uma demonstração da GoEPI">
+				<SidebarCta variant={ctaVariant.key} />
+			</aside>
+		</div>
 	</section>
 
 	{
@@ -116,3 +136,81 @@ const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes
 		)
 	}
 </GoepiLayout>
+
+<script is:inline>
+	/* Eventos dos CTAs do artigo. Usa window.goepiTrack (o mesmo helper do site
+	   goepi.com.br, PR #18); se esta página não tiver o helper, define um igual:
+	   evento no dataLayer (GTM) e gtag('event'). Também envia whatsapp_click
+	   para links wa.me, como no site. */
+	(function () {
+		var w = window;
+		w.dataLayer = w.dataLayer || [];
+		if (typeof w.goepiTrack !== "function") {
+			w.goepiTrack = function (name, params) {
+				var data = { event: name };
+				for (var k in params) if (Object.prototype.hasOwnProperty.call(params, k)) data[k] = params[k];
+				w.dataLayer.push(data);
+				if (typeof w.gtag === "function") w.gtag("event", name, params || {});
+			};
+			document.addEventListener(
+				"click",
+				function (e) {
+					var a = e.target && e.target.closest ? e.target.closest('a[href*="wa.me/"]') : null;
+					if (!a) return;
+					w.goepiTrack("whatsapp_click", {
+						link_url: a.href,
+						link_text: (a.getAttribute("aria-label") || a.textContent || "").trim().slice(0, 100),
+						page_path: location.pathname,
+					});
+				},
+				true,
+			);
+		}
+		document.addEventListener(
+			"click",
+			function (e) {
+				var t = e.target && e.target.closest ? e.target : null;
+				if (!t) return;
+				var cta = t.closest("a[data-cta-position]");
+				if (cta) {
+					w.goepiTrack("cta_click", {
+						cta_position: cta.getAttribute("data-cta-position"),
+						cta_variant: cta.getAttribute("data-cta-variant"),
+						page_path: location.pathname,
+					});
+					return;
+				}
+				var ai = t.closest("a[data-ai-tool]");
+				if (ai) w.goepiTrack("ai_summary_click", { tool: ai.getAttribute("data-ai-tool"), page_path: location.pathname });
+			},
+			true,
+		);
+	})();
+</script>
+
+<style>
+	/* Coluna do artigo + card fixo de CTA (só no desktop). */
+	.article-sidebar {
+		display: none;
+	}
+	@media (min-width: 1100px) {
+		.article-layout {
+			display: grid;
+			grid-template-columns: minmax(0, 760px) 280px;
+			gap: clamp(36px, 4vw, 64px);
+			justify-content: center;
+			align-items: start;
+			max-width: 1180px;
+			margin: 0 auto;
+		}
+		.article-layout > :global(.article-content) {
+			max-width: none;
+			margin: 0;
+		}
+		.article-sidebar {
+			display: block;
+			position: sticky;
+			top: 108px;
+		}
+	}
+</style>
