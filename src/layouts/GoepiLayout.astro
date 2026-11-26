@@ -6,6 +6,7 @@
 import { EmDashHead, EmDashBodyStart, EmDashBodyEnd } from "emdash/ui";
 import GoogleTagManager from "../components/GoogleTagManager.astro";
 import GoogleTagManagerNoscript from "../components/GoogleTagManagerNoscript.astro";
+import StripJsonLd from "../components/StripJsonLd.astro";
 import { createPublicPageContext } from "emdash/page";
 
 interface Props {
@@ -19,6 +20,11 @@ interface Props {
 	modifiedTime?: string | null;
 	bodyClass?: string;
 	content?: { collection: string; id: string; slug?: string | null };
+	/**
+	 * JSON-LD próprio da página. Quando é passado, o BlogPosting básico do
+	 * EmDash sai do <head> e fica só este (ver src/utils/blog-schema.ts).
+	 */
+	jsonLd?: Record<string, unknown> | null;
 }
 
 const {
@@ -32,7 +38,11 @@ const {
 	modifiedTime,
 	bodyClass = "blog-page",
 	content,
+	jsonLd = null,
 } = Astro.props;
+
+/** JSON seguro dentro de <script>: escapa "<" para não fechar a tag. */
+const jsonLdText = jsonLd ? JSON.stringify(jsonLd).replace(/</g, "\\u003c") : null;
 
 const siteName = "Blog GoEPI";
 /** Imagem de compartilhamento padrão (a mesma do site), quando o post não tem capa. */
@@ -61,7 +71,8 @@ const pageCtx = createPublicPageContext({
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{fullTitle}</title>
-		<EmDashHead page={pageCtx} />
+		<StripJsonLd types={jsonLd ? ["BlogPosting"] : []}><EmDashHead page={pageCtx} /></StripJsonLd>
+		{jsonLdText && <script is:inline type="application/ld+json" set:html={jsonLdText} />}
 		<GoogleTagManager />
 		<meta name="theme-color" content="#040A1F" />
 		<link rel="icon" href="/favicon.ico" sizes="48x48" />

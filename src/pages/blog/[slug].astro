@@ -19,6 +19,7 @@ import SidebarCta from "../../components/cta/SidebarCta.astro";
 import AiSummary from "../../components/cta/AiSummary.astro";
 import { formatShortDate, imageUrl, splitTitle, FALLBACK_IMAGE, SITE_URL } from "../../utils/goepi";
 import { injectCtas, pickVariant } from "../../utils/blog-cta";
+import { buildPostJsonLd } from "../../utils/blog-schema";
 
 const slug = decodeSlug(Astro.params.slug);
 if (!slug) return Astro.rewrite("/404");
@@ -47,6 +48,17 @@ const content = getEditMeta(post.data.content)
 	: (injectCtas(post.data.content, ctaVariant) as typeof post.data.content);
 const ptComponents = { type: { goepiCta: GoepiCtaBlock } };
 const articleUrl = `${SITE_URL}/blog/${slug}`;
+
+// JSON-LD: BlogPosting completo, BreadcrumbList e FAQPage (src/utils/blog-schema.ts).
+const jsonLd = buildPostJsonLd({
+	url: articleUrl,
+	title,
+	description: seo.description,
+	content: post.data.content,
+	coverImage: heroImage === FALLBACK_IMAGE ? null : heroImage,
+	publishedAt: post.data.publishedAt ?? null,
+	updatedAt: post.data.updatedAt ?? null,
+});
 
 const category = (post.data.terms?.category ?? [])[0] ?? null;
 const publishedAt = post.data.publishedAt ?? null;
@@ -80,6 +92,7 @@ const related = [...sameCategory, ...others.filter((p) => !sameCategory.includes
 	modifiedTime={post.data.updatedAt?.toISOString() ?? null}
 	bodyClass="blog-page blog-post-page"
 	content={{ collection: "posts", id: post.data.id, slug }}
+	jsonLd={jsonLd}
 >
 	<section class="article-hero">
 		<div class="article-hero__image" style={`background-image: url(${JSON.stringify(heroImage)})`} aria-hidden="true"></div>
